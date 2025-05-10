@@ -306,7 +306,7 @@ Une réprésentation de l'impact des variables dans le modèle de régression lo
 
 <u>Graphique Référence : Coefficients de la Régression Logistique </u>
 
-![alt text](images\Var_imp_RL.png)
+![alt text](images/Var_imp_RL.png)
 
 
 Le graphique permet de constater que le fait de ne pas avoir de l'hypertension, de faire une activité physique ainsi que d'être une femme diminue le risque d'avoir une forte probabilité d'attaque cardiaque (classe de référence Female : 0).
