@@ -304,7 +304,7 @@ Outre la précision assez moyenne de ce modèle, on relève une valeur de la mé
 Une réprésentation de l'impact des variables dans le modèle de régression logistique est présenté sur ce graphique.
 
 
-<u>Graphique N°7 : Coefficients de la Régression Logistique </u>
+<u>Graphique Référence : Coefficients de la Régression Logistique </u>
 
 ![alt text](images\Var_imp_RL.png)
 
