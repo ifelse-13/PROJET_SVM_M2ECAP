@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""Generate mirrored Quarto reference pages for every documentable file in a repository.
+
+For each text file found under *source_root* the script creates a ``.qmd`` page
+that contains a short summary, key symbols extracted from the source, and an
+excerpt of the raw content.  Directory index pages are also produced so the
+generated documentation tree mirrors the original directory structure.
+
+Typical usage::
+
+    python scripts/generate_quarto_docs.py
+    python scripts/generate_quarto_docs.py --source-root . --docs-root docs/reference
+    python scripts/generate_quarto_docs.py --clean
+"""
 from __future__ import annotations
 
 import argparse
@@ -91,6 +104,18 @@ LANGUAGE_BY_SUFFIX = {
 
 @dataclass(frozen=True)
 class FileDoc:
+    """Immutable record that holds all documentation data for a single source file.
+
+    Attributes:
+        source_path: Path of the source file relative to the repository root.
+        output_path: Absolute path of the ``.qmd`` file to be written.
+        title: Human-readable display title (typically the file name).
+        summary: One-sentence description of the file's purpose or content.
+        key_elements: Bullet-point strings listing imports, classes, functions, etc.
+        excerpt: Optional fenced-code-block with the first lines of the file.
+        language: Lowercase language identifier used in fenced code blocks.
+    """
+
     source_path: Path
     output_path: Path
     title: str
@@ -101,12 +126,44 @@ class FileDoc:
 
 
 def slugify(value: str) -> str:
+    """Convert *value* to a URL-safe, lowercase slug.
+
+    Non-ASCII characters are first normalised to their closest ASCII
+    equivalent (NFKD + ASCII encoding).  Any remaining character that is not
+    alphanumeric, a dot, a hyphen, or an underscore is replaced by a hyphen.
+    Leading and trailing hyphens, underscores, and dots are stripped.  If the
+    result is empty the string ``"index"`` is returned.
+
+    Args:
+        value: Arbitrary string to slugify.
+
+    Returns:
+        URL-safe slug string.
+    """
     normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     slug = re.sub(r"[^A-Za-z0-9._-]+", "-", normalized).strip("-_.").lower()
     return slug or "index"
 
 
 def is_binary_path(path: Path) -> bool:
+    """Return ``True`` if *path* should be treated as a binary (non-text) file.
+
+    A file is considered binary when any of the following is true:
+
+    * Its suffix appears in :data:`BINARY_SUFFIXES`.
+    * Reading the first :data:`TEXT_SAMPLE_BYTES` bytes raises an
+      :exc:`OSError`.
+    * The sample contains a null byte ``\\x00``.
+    * The sample cannot be decoded as UTF-8.
+
+    An empty file is **not** considered binary.
+
+    Args:
+        path: File system path to inspect.
+
+    Returns:
+        ``True`` if the file is binary, ``False`` otherwise.
+    """
     if path.suffix.lower() in BINARY_SUFFIXES:
         return True
     try:
@@ -125,23 +182,79 @@ def is_binary_path(path: Path) -> bool:
 
 
 def read_text(path: Path) -> str:
+    """Read *path* as UTF-8 text, replacing undecodable bytes.
+
+    Args:
+        path: File to read.
+
+    Returns:
+        Full file contents as a string.
+    """
     return path.read_text(encoding="utf-8", errors="replace")
 
 
 def qmd_name_for(source_path: Path) -> str:
+    """Return the ``.qmd`` file name for *source_path*.
+
+    The file name (not the full path) is slugified and the ``.qmd`` extension
+    is appended, e.g. ``My Script.py`` → ``my-script.py.qmd``.
+
+    Args:
+        source_path: Path whose name should be converted.
+
+    Returns:
+        Slugified file name with ``.qmd`` appended.
+    """
     return f"{slugify(source_path.name)}.qmd"
 
 
 def output_path_for(source_path: Path, docs_root: Path) -> Path:
+    """Compute the output ``.qmd`` path for a given *source_path*.
+
+    Each directory component of *source_path* is slugified to build a
+    mirror directory tree under *docs_root*.
+
+    Args:
+        source_path: Relative path of the source file from the repository root.
+        docs_root: Absolute path of the root directory for generated docs.
+
+    Returns:
+        Absolute path where the ``.qmd`` file for this source should be written.
+    """
     parent_parts = [slugify(part) for part in source_path.parent.parts if part not in ("", ".")]
     return docs_root.joinpath(*parent_parts, qmd_name_for(source_path))
 
 
 def detect_language(path: Path) -> str:
+    """Return the language identifier for *path* based on its suffix.
+
+    The identifier is looked up in :data:`LANGUAGE_BY_SUFFIX`.  If the suffix
+    is not recognised, ``"text"`` is returned as a safe default.
+
+    Args:
+        path: File whose extension should be used for detection.
+
+    Returns:
+        Lowercase language string suitable for use in fenced code blocks.
+    """
     return LANGUAGE_BY_SUFFIX.get(path.suffix.lower(), "text")
 
 
 def summarize_requirements(text: str) -> tuple[str, list[str]]:
+    """Produce a summary and key-element list for a ``requirements.txt`` file.
+
+    Comment lines (starting with ``#``) and blank lines are ignored when
+    counting packages.  Up to eight package names are listed in the
+    ``"dependencies"`` key element; a trailing ellipsis is added when there
+    are more.
+
+    Args:
+        text: Full text content of the requirements file.
+
+    Returns:
+        A ``(summary, key_elements)`` tuple where *summary* is a one-sentence
+        string and *key_elements* is a list of bullet-point strings.
+    """
     packages = [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
     summary = f"Pinned Python dependency list containing {len(packages)} package entries."
     key_elements = [f"dependencies: {', '.join(packages[:8])}{'…' if len(packages) > 8 else ''}"]
@@ -149,6 +262,18 @@ def summarize_requirements(text: str) -> tuple[str, list[str]]:
 
 
 def summarize_markdown(text: str) -> tuple[str, list[str]]:
+    """Produce a summary and key-element list for a Markdown or Quarto file.
+
+    The first non-heading, non-image, non-HTML paragraph line is used as the
+    summary.  Up to six ATX headings and six image references are reported as
+    key elements.
+
+    Args:
+        text: Full text content of the Markdown file.
+
+    Returns:
+        A ``(summary, key_elements)`` tuple.
+    """
     headings = [line.lstrip("# ").strip() for line in text.splitlines() if line.startswith("#")]
     paragraphs = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith(("#", "![", "<"))]
     summary = paragraphs[0] if paragraphs else "Markdown document describing project context and results."
@@ -162,6 +287,23 @@ def summarize_markdown(text: str) -> tuple[str, list[str]]:
 
 
 def summarize_python(text: str) -> tuple[str, list[str]]:
+    """Produce a summary and key-element list for a Python source file.
+
+    The module-level docstring (if any) is used as the summary.  When no
+    docstring is present, a synthetic sentence is built from the names of the
+    top-level classes and functions found in the AST.  Imports, class names,
+    and function names are each reported as a separate key element (up to
+    eight items each).
+
+    A :exc:`SyntaxError` during parsing results in a generic summary and an
+    empty key-element list rather than raising.
+
+    Args:
+        text: Python source code as a string.
+
+    Returns:
+        A ``(summary, key_elements)`` tuple.
+    """
     try:
         tree = ast.parse(text)
     except SyntaxError:
@@ -205,6 +347,19 @@ def summarize_python(text: str) -> tuple[str, list[str]]:
 
 
 def extract_notebook_code(notebook: dict) -> str:
+    """Concatenate code-cell sources from *notebook* up to the excerpt limit.
+
+    Code cells are joined with a blank line between them.  Extraction stops
+    early once the combined text exceeds :data:`EXCERPT_CHAR_LIMIT` to avoid
+    reading unnecessarily large notebooks.
+
+    Args:
+        notebook: Parsed Jupyter notebook dictionary.
+
+    Returns:
+        Concatenated code snippets as a single string.  Empty string when
+        there are no code cells.
+    """
     snippets: list[str] = []
     for cell in notebook.get("cells", []):
         if cell.get("cell_type") == "code":
@@ -217,6 +372,18 @@ def extract_notebook_code(notebook: dict) -> str:
 
 
 def sanitize_python_snippet(text: str) -> str:
+    """Remove IPython magic commands and shell/package-manager invocations.
+
+    Lines that start with ``!``, ``%``, ``pip``, ``pip3``,
+    ``python -m pip``, or ``conda`` are dropped so that the remaining code
+    can be safely parsed as plain Python.
+
+    Args:
+        text: Raw Python or notebook code snippet.
+
+    Returns:
+        Cleaned snippet with magic/shell lines removed.
+    """
     cleaned_lines: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
@@ -229,6 +396,23 @@ def sanitize_python_snippet(text: str) -> str:
 
 
 def summarize_notebook(text: str) -> tuple[str, list[str], str | None]:
+    """Produce a summary and key-element list for a Jupyter notebook.
+
+    The summary reports the number of code and markdown cells.  Key elements
+    are derived by calling :func:`summarize_python` on the concatenated
+    sanitized code cells, plus a list of ATX headings from markdown cells.
+
+    If *text* cannot be decoded as JSON the function returns a generic
+    summary, an empty key-element list, and ``None`` for the excerpt source.
+
+    Args:
+        text: Raw JSON text of the ``.ipynb`` file.
+
+    Returns:
+        A ``(summary, key_elements, code_excerpt)`` triple where
+        *code_excerpt* is the raw code concatenated from code cells, or
+        ``None`` when no code is present.
+    """
     try:
         notebook = json.loads(text)
     except json.JSONDecodeError:
@@ -257,6 +441,18 @@ def summarize_notebook(text: str) -> tuple[str, list[str], str | None]:
 
 
 def summarize_structured_text(text: str) -> tuple[str, list[str]]:
+    """Produce a summary and key-element list for structured text files.
+
+    This is used for YAML, TOML, JSON, and similar configuration formats.
+    The first non-empty line is used as the summary, and top-level key names
+    (patterns ``KEY:`` or ``KEY=``) are reported as a key element.
+
+    Args:
+        text: Full text content of the structured file.
+
+    Returns:
+        A ``(summary, key_elements)`` tuple.
+    """
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     summary = lines[0] if lines else "Structured text configuration file."
     keys = re.findall(r"^([A-Za-z0-9_.-]+)\s*[:=]", text, flags=re.MULTILINE)
@@ -265,12 +461,39 @@ def summarize_structured_text(text: str) -> tuple[str, list[str]]:
 
 
 def summarize_generic_text(text: str) -> tuple[str, list[str]]:
+    """Produce a minimal summary for unrecognised plain-text files.
+
+    The summary is the first non-empty line truncated to 200 characters.
+    No key elements are extracted.
+
+    Args:
+        text: Full text content of the file.
+
+    Returns:
+        A ``(summary, key_elements)`` tuple where *key_elements* is always
+        an empty list.
+    """
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     summary = lines[0][:200] if lines else "Text file."
     return summary, []
 
 
 def build_excerpt(text: str, language: str) -> str | None:
+    """Build a fenced-code-block excerpt from *text*.
+
+    At most :data:`EXCERPT_LINE_LIMIT` lines are included.  If the resulting
+    text exceeds :data:`EXCERPT_CHAR_LIMIT` characters it is hard-truncated
+    and ``"\\n..."`` is appended to signal truncation.  Empty text yields
+    ``None``.
+
+    Args:
+        text: Source text to excerpt.
+        language: Language identifier for the fenced code fence (e.g.
+            ``"python"``).
+
+    Returns:
+        A Markdown fenced-code string, or ``None`` if *text* is empty.
+    """
     lines = text.splitlines()
     excerpt = "\n".join(lines[:EXCERPT_LINE_LIMIT]).strip()
     if len(excerpt) > EXCERPT_CHAR_LIMIT:
@@ -281,6 +504,22 @@ def build_excerpt(text: str, language: str) -> str | None:
 
 
 def describe_file(source_root: Path, path: Path, docs_root: Path) -> FileDoc:
+    """Build a :class:`FileDoc` by inspecting the contents of *path*.
+
+    The function dispatches to the appropriate ``summarize_*`` helper based on
+    the file name and suffix.  It then constructs the output path, generates
+    an excerpt, and returns an immutable :class:`FileDoc` record.
+
+    Args:
+        source_root: Absolute path of the repository root used to derive
+            the relative source path.
+        path: Absolute path of the source file to describe.
+        docs_root: Absolute path of the root directory for generated docs,
+            used to compute the output path.
+
+    Returns:
+        A fully populated :class:`FileDoc` instance.
+    """
     relative_path = path.relative_to(source_root)
     language = detect_language(path)
     text = read_text(path)
@@ -316,6 +555,19 @@ def describe_file(source_root: Path, path: Path, docs_root: Path) -> FileDoc:
 
 
 def render_file_doc(file_doc: FileDoc) -> str:
+    """Render a :class:`FileDoc` as a Quarto Markdown (``.qmd``) document.
+
+    The output always contains a YAML front-matter block, a level-1 heading,
+    a source-path link, and a *Summary* section.  Optional *Key symbols or
+    elements* and *Excerpt* sections are appended when the corresponding
+    fields are non-empty.
+
+    Args:
+        file_doc: Populated documentation record for a single source file.
+
+    Returns:
+        Complete ``.qmd`` document as a string, terminated by a newline.
+    """
     lines = [
         "---",
         f'title: "{file_doc.source_path.as_posix()}"',
@@ -343,6 +595,16 @@ def render_file_doc(file_doc: FileDoc) -> str:
 
 
 def write_if_changed(path: Path, content: str) -> None:
+    """Write *content* to *path* only when the existing content differs.
+
+    Parent directories are created automatically.  This avoids updating file
+    modification timestamps (and triggering incremental build tools) when the
+    generated content has not changed.
+
+    Args:
+        path: Destination file path (need not exist yet).
+        content: UTF-8 text to write.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() and path.read_text(encoding="utf-8") == content:
         return
@@ -350,12 +612,41 @@ def write_if_changed(path: Path, content: str) -> None:
 
 
 def docs_dir_for(source_dir: Path, docs_root: Path) -> Path:
+    """Return the output directory that mirrors *source_dir* under *docs_root*.
+
+    Each component of *source_dir* is slugified.  The repository root
+    (represented as ``Path(".")``) maps directly to *docs_root*.
+
+    Args:
+        source_dir: Relative directory path from the repository root.
+        docs_root: Absolute path of the root directory for generated docs.
+
+    Returns:
+        Absolute path of the corresponding directory under *docs_root*.
+    """
     if source_dir == Path("."):
         return docs_root
     return docs_root.joinpath(*[slugify(part) for part in source_dir.parts])
 
 
 def render_directory_index(source_dir: Path, docs_root: Path, child_dirs: list[Path], file_docs: list[FileDoc]) -> str:
+    """Render a directory-level ``index.qmd`` listing sub-directories and files.
+
+    Subdirectory entries link to their own ``index.qmd`` using paths relative
+    to the current directory's output location.  File entries link to the
+    individual ``.qmd`` page produced for that file.  When there are no
+    entries a placeholder message is rendered instead.
+
+    Args:
+        source_dir: Relative path of the directory being documented.
+        docs_root: Absolute path of the root directory for generated docs.
+        child_dirs: Sorted list of relative paths for immediate subdirectories.
+        file_docs: List of :class:`FileDoc` instances for files in this
+            directory.
+
+    Returns:
+        Complete ``index.qmd`` document as a string, terminated by a newline.
+    """
     source_label = source_dir.as_posix() if source_dir.parts else "."
     current_docs_dir = docs_dir_for(source_dir, docs_root)
     lines = [
@@ -392,6 +683,22 @@ def render_directory_index(source_dir: Path, docs_root: Path, child_dirs: list[P
 
 
 def iter_source_files(source_root: Path, docs_root: Path) -> Iterable[Path]:
+    """Yield every documentable (non-binary, non-ignored) file under *source_root*.
+
+    Directories listed in :data:`IGNORED_DIR_NAMES` are pruned during the
+    walk.  The ``docs`` output tree itself is also excluded to prevent
+    self-referential documentation.  Binary files detected by
+    :func:`is_binary_path` and files in :data:`IGNORED_FILE_NAMES` are
+    skipped.  Files within each directory are yielded in alphabetical order.
+
+    Args:
+        source_root: Absolute path of the repository root to walk.
+        docs_root: Absolute path of the root directory for generated docs.
+            The parent of this directory is used as the exclusion boundary.
+
+    Yields:
+        Absolute :class:`~pathlib.Path` objects for each documentable file.
+    """
     docs_project_root = docs_root.parent
     for current_root, dir_names, file_names in os.walk(source_root, topdown=True):
         current_path = Path(current_root)
@@ -420,6 +727,16 @@ def iter_source_files(source_root: Path, docs_root: Path) -> Iterable[Path]:
 
 
 def cleanup_stale_outputs(docs_root: Path, expected_paths: set[Path]) -> None:
+    """Remove ``.qmd`` files and empty directories that are no longer expected.
+
+    Any ``.qmd`` file under *docs_root* that is not present in
+    *expected_paths* is deleted.  Empty directories left behind after deletion
+    are also removed (deepest first to allow cascading removal).
+
+    Args:
+        docs_root: Root of the generated docs tree to clean.
+        expected_paths: Set of absolute paths that should be retained.
+    """
     if not docs_root.exists():
         return
     for path in sorted(docs_root.rglob("*.qmd"), reverse=True):
@@ -431,6 +748,21 @@ def cleanup_stale_outputs(docs_root: Path, expected_paths: set[Path]) -> None:
 
 
 def generate_docs(source_root: Path, docs_root: Path) -> list[Path]:
+    """Scan *source_root* and write Quarto documentation under *docs_root*.
+
+    The function walks the repository, describes each documentable file,
+    writes individual ``.qmd`` pages and directory ``index.qmd`` files, then
+    removes any stale output files left from previous runs.
+
+    Args:
+        source_root: Absolute path of the repository root to document.
+        docs_root: Absolute path of the destination directory for generated
+            ``.qmd`` files.
+
+    Returns:
+        Sorted list of absolute paths of all ``.qmd`` files written or
+        updated during this run.
+    """
     file_docs: list[FileDoc] = []
     directory_map: dict[Path, list[FileDoc]] = {}
     child_dir_map: dict[Path, set[Path]] = {}
@@ -468,6 +800,20 @@ def generate_docs(source_root: Path, docs_root: Path) -> list[Path]:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for the documentation generator.
+
+    Defines three optional arguments:
+
+    * ``--source-root``: repository root to scan (defaults to the parent of
+      the ``scripts/`` directory).
+    * ``--docs-root``: destination directory for generated ``.qmd`` files
+      (defaults to ``<source-root>/docs/reference``).
+    * ``--clean``: when set, the docs root is deleted before regenerating.
+
+    Returns:
+        Parsed :class:`argparse.Namespace` with attributes ``source_root``,
+        ``docs_root``, and ``clean``.
+    """
     parser = argparse.ArgumentParser(description="Generate mirrored Quarto reference pages for repository files.")
     parser.add_argument(
         "--source-root",
@@ -490,6 +836,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Entry point: parse arguments, run the generator, and print a summary.
+
+    If ``--clean`` is passed and the docs root exists, it is removed entirely
+    before generation begins.  After generation, the number of produced files
+    and the output directory are printed to standard output.
+
+    Returns:
+        Exit code ``0`` on success.
+    """
     args = parse_args()
     source_root = args.source_root.resolve()
     docs_root = args.docs_root.resolve()
