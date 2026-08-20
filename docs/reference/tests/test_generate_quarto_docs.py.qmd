@@ -1,0 +1,56 @@
+---
+title: "tests/test_generate_quarto_docs.py"
+---
+
+# `tests/test_generate_quarto_docs.py`
+
+- Source path: `tests/test_generate_quarto_docs.py`
+
+## Summary
+
+Python module defining GenerateQuartoDocsTests, test_generator_creates_mirrored_docs_and_ignores_binary_and_vendor_dirs, test_generator_creates_directory_indexes_and_notebook_page.
+
+## Key symbols or elements
+
+- imports: importlib.util, json, pathlib.Path, sys, tempfile.TemporaryDirectory, unittest
+- classes: GenerateQuartoDocsTests
+- functions: test_generator_creates_mirrored_docs_and_ignores_binary_and_vendor_dirs, test_generator_creates_directory_indexes_and_notebook_page
+
+## Excerpt
+
+```python
+import importlib.util
+import json
+import sys
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = REPO_ROOT / "scripts" / "generate_quarto_docs.py"
+SPEC = importlib.util.spec_from_file_location("generate_quarto_docs", MODULE_PATH)
+MODULE = importlib.util.module_from_spec(SPEC)
+assert SPEC and SPEC.loader
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+
+
+class GenerateQuartoDocsTests(unittest.TestCase):
+    def test_generator_creates_mirrored_docs_and_ignores_binary_and_vendor_dirs(self) -> None:
+        with TemporaryDirectory() as tmp_dir:
+            source_root = Path(tmp_dir) / "repo"
+            docs_root = source_root / "docs" / "reference"
+            (source_root / "src").mkdir(parents=True)
+            (source_root / "node_modules").mkdir()
+            (source_root / "src" / "demo.py").write_text(
+                "import math\n\n\ndef compute(value):\n    return math.sqrt(value)\n",
+                encoding="utf-8",
+            )
+            (source_root / "README.md").write_text("# Demo\n\nProject summary.\n", encoding="utf-8")
+            (source_root / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\nbinary")
+            (source_root / "node_modules" / "ignored.js").write_text(
+                "export const ignored = true;\n",
+                encoding="utf-8",
+...
+```

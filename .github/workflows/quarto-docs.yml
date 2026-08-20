@@ -1,0 +1,45 @@
+name: Generate Quarto documentation
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - "docs/reference/**"
+      - "docs/_site/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate Quarto reference pages
+        run: python scripts/generate_quarto_docs.py --clean
+
+      - name: Commit generated documentation
+        run: |
+          if git diff --quiet -- docs; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "docs: regenerate quarto reference"
+          git push

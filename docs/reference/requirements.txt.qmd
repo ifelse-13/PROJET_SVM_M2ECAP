@@ -1,0 +1,60 @@
+---
+title: "requirements.txt"
+---
+
+# `requirements.txt`
+
+- Source path: `requirements.txt`
+
+## Summary
+
+Pinned Python dependency list containing 446 package entries.
+
+## Key symbols or elements
+
+- dependencies: absl-py==2.1.0, aiobotocore==2.7.0, aiohttp==3.9.3, aioitertools==0.7.1, aiosignal==1.2.0, alabaster==0.7.12, alibi==0.9.6, altair==5.0.1…
+
+## Excerpt
+
+```text
+absl-py==2.1.0
+aiobotocore==2.7.0
+aiohttp==3.9.3
+aioitertools==0.7.1
+aiosignal==1.2.0
+alabaster==0.7.12
+alibi==0.9.6
+altair==5.0.1
+anaconda-anon-usage==0.4.3
+anaconda-catalogs==0.2.0
+anaconda-client==1.12.3
+anaconda-cloud-auth==0.1.4
+anaconda-navigator==2.5.2
+anaconda-project==0.11.1
+annotated-types==0.7.0
+anyio==4.2.0
+anywidget==0.9.13
+appdirs==1.4.4
+archspec==0.2.1
+argon2-cffi==21.3.0
+argon2-cffi-bindings==21.2.0
+arrow==1.2.3
+artemis==0.0.0
+astor==0.8.1
+astroid==2.14.2
+astropy==5.3.4
+asttokens==3.0.0
+async-lru==2.0.4
+atomicwrites==1.4.0
+attrs==23.2.0
+Automat==20.2.0
+autopep8==1.6.0
+Babel==2.11.0
+backoff==2.2.1
+backports.functools-lru-cache==1.6.4
+backports.tempfile==1.0
+backports.weakref==1.0.post1
+bcrypt==3.2.0
+beautifulsoup4==4.12.2
+binaryornot==0.4.4
+```

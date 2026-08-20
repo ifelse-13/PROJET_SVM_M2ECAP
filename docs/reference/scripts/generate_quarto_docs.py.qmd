@@ -1,0 +1,61 @@
+---
+title: "scripts/generate_quarto_docs.py"
+---
+
+# `scripts/generate_quarto_docs.py`
+
+- Source path: `scripts/generate_quarto_docs.py`
+
+## Summary
+
+Python module defining FileDoc, slugify, is_binary_path, read_text.
+
+## Key symbols or elements
+
+- imports: __future__.annotations, argparse, ast, dataclasses.dataclass, json, os, pathlib.Path, re
+- classes: FileDoc
+- functions: slugify, is_binary_path, read_text, qmd_name_for, output_path_for, detect_language, summarize_requirements, summarize_markdown
+
+## Excerpt
+
+```python
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import ast
+import json
+import os
+import re
+import shutil
+import unicodedata
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable
+
+
+IGNORED_DIR_NAMES = {
+    ".git",
+    ".hg",
+    ".idea",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "_site",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "target",
+    "vendor",
+    "venv",
+}
+
+IGNORED_FILE_NAMES = {".DS_Store", "desktop.ini"}
+TEXT_SAMPLE_BYTES = 8192
+EXCERPT_CHAR_LIMIT = 1400
+EXCERPT_LINE_LIMIT = 40
+```

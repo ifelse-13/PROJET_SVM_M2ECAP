@@ -1,0 +1,11 @@
+---
+title: "Reference: scripts"
+---
+
+# Reference: `scripts`
+
+## Contents
+
+### Files
+
+- [`generate_quarto_docs.py`](generate_quarto_docs.py.qmd)

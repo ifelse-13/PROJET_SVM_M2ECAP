@@ -1,0 +1,11 @@
+---
+title: "Reference: .github"
+---
+
+# Reference: `.github`
+
+## Contents
+
+### Directories
+
+- [.github/workflows](workflows/index.qmd)
