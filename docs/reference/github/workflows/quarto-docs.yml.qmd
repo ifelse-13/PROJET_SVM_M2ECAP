@@ -1,0 +1,59 @@
+---
+title: ".github/workflows/quarto-docs.yml"
+---
+
+# `.github/workflows/quarto-docs.yml`
+
+- Source path: `.github/workflows/quarto-docs.yml`
+
+## Summary
+
+name: Generate Quarto documentation
+
+## Key symbols or elements
+
+- keys: name, on, permissions, jobs
+
+## Excerpt
+
+```yaml
+name: Generate Quarto documentation
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - "docs/reference/**"
+      - "docs/_site/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate Quarto reference pages
+        run: python scripts/generate_quarto_docs.py --clean
+
+      - name: Commit generated documentation
+        run: |
+          if git diff --quiet -- docs; then
+            echo "No documentation changes to commit."
+            exit 0
+          fi
+```

@@ -1,0 +1,60 @@
+---
+title: "Projet_SVM_script.ipynb"
+---
+
+# `Projet_SVM_script.ipynb`
+
+- Source path: `Projet_SVM_script.ipynb`
+
+## Summary
+
+Jupyter notebook with 117 code cells and 47 markdown cells.
+
+## Key symbols or elements
+
+- imports: matplotlib.pyplot, numpy, pandas, scipy.stats.mstats.winsorize, seaborn, sklearn.linear_model.LogisticRegression, sklearn.linear_model.SGDClassifier, sklearn.metrics.accuracy_score
+- markdown headings: Analyse Exploratoire, Format des variables, Valeurs manquantes, Variable d'intérêt, Variables explicatives, Variables catégorielles
+
+## Excerpt
+
+```python
+pip install --upgrade scikit-learn
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+from sklearn.svm import SVC
+import seaborn as sns
+
+from sklearn.svm import SVC
+from sklearn.svm import LinearSVC 
+from sklearn.linear_model import SGDClassifier , LogisticRegression
+
+from sklearn.metrics import confusion_matrix , accuracy_score
+
+from sklearn.model_selection import cross_val_score ,learning_curve ,GridSearchCV
+from sklearn_evaluation import plot
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+from scipy.stats.mstats import winsorize
+
+#Importation de la base de données
+data = pd.read_csv("C:/Users/yavav/Downloads/heart_attack_risk_dataset.csv")
+
+data.sample(5)
+
+data.describe()
+
+data.info() #Ce code nous permet de voir que les variables ont un format adéquat, excepté les types "object" qui devraient être transformées en catégorie. 
+
+for col in data.columns:
+    if data[col].dtype == 'object':
+        data[col] = data[col].astype('category') #On transforme les "objects" en catégorie
+
+#vérification
+data.info()
+```

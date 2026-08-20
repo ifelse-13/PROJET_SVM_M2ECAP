@@ -1,0 +1,19 @@
+---
+title: "Reference: ."
+---
+
+# Reference: `.`
+
+## Contents
+
+### Directories
+
+- [.github](github/index.qmd)
+- [scripts](scripts/index.qmd)
+- [tests](tests/index.qmd)
+
+### Files
+
+- [`Projet expliqué.md`](projet-explique.md.qmd)
+- [`Projet_SVM_script.ipynb`](projet_svm_script.ipynb.qmd)
+- [`requirements.txt`](requirements.txt.qmd)

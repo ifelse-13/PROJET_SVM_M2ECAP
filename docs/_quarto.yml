@@ -1,0 +1,19 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "PROJET_SVM_M2ECAP Documentation"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: automation.qmd
+        text: Automation
+      - href: reference/index.qmd
+        text: Reference
+
+format:
+  html:
+    toc: true
+    theme: cosmo

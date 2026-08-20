@@ -1,0 +1,39 @@
+---
+title: "Documentation automation"
+---
+
+# Documentation automation
+
+## Generator
+
+The repository-level generator lives in `scripts/generate_quarto_docs.py`.
+
+It:
+
+- scans the repository root
+- ignores common cache/build/vendor folders and binary files
+- mirrors documentable files into `docs/reference/`
+- generates directory `index.qmd` pages
+- removes stale generated pages when source files disappear
+
+## Workflow
+
+The GitHub Actions workflow in `.github/workflows/quarto-docs.yml` runs on pushes and manual dispatch.
+
+When source files change, it:
+
+1. checks out the repository
+2. runs the Python generator
+3. commits and pushes generated documentation updates if needed
+
+## Local usage
+
+```bash
+python scripts/generate_quarto_docs.py --clean
+```
+
+If Quarto is installed locally, you can render the site from the `docs/` directory:
+
+```bash
+quarto render docs
+```

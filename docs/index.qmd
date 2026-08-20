@@ -1,0 +1,22 @@
+---
+title: "PROJET_SVM_M2ECAP Documentation"
+---
+
+# PROJET_SVM_M2ECAP Documentation
+
+This Quarto project contains generated reference pages for the repository source tree.
+
+## What is included
+
+- a generated `.qmd` page for each documentable source file
+- mirrored directory indexes under `docs/reference/`
+- automation notes for the generation workflow
+
+## Existing project material
+
+The repository already includes a narrative project report and a notebook. They are included through the generated reference tree rather than copied into a second manual structure.
+
+## Start here
+
+- [Automation details](automation.qmd)
+- [Generated reference index](reference/index.qmd)

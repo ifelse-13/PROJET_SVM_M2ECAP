@@ -1,0 +1,36 @@
+---
+title: "Projet expliqué.md"
+---
+
+# `Projet expliqué.md`
+
+- Source path: `Projet expliqué.md`
+
+## Summary
+
+Les maladies cardiovasculaires, et en particulier les crises cardiaques (infarctus du myocarde), sont l’une des principales causes de décès dans le monde. Malgré les progrès de la médecine et de la technologie, bon nombre de ces événements surviennent soudainement et sans diagnostic anticipé. L’un des plus grands défis aujourd’hui est d’identifier les les personnes à haut risque ainsi que les facteurs qui déterminent la probabilité de risque cardiaque. En effet, cela permet de mettre en œuvre des mesures préventives efficaces et d'adopter des habitudes de vie saines. Dans ce contexte, l’utilisation de techniques d’apprentissage automatique offre l'opportunité d'analyser de grands volumes de données et à construire des modèles prédictifs.
+
+## Key symbols or elements
+
+- headings: Introduction et problématique, Données, Visualisation des données, Partie 1: Premières modélisations, Traitement des données, Justification du codage des variables
+- linked assets: images/Variable_dépendante.png, images/Variables_quanti.png, images/Variables_quali.png, images/cross-validation.png, images/RBF_s.png, images/RBF_ns.png
+
+## Excerpt
+
+```markdown
+<center><h1> Prédiction du risque d'attaque cardiaque</h1></center>
+<p align="center">
+
+<center><h3> Niamiti Bethel Touman et Yava Vilar Valera </h3> </center>
+
+<center><h3> Master 2 ECAP - SVM </h3> </center>
+
+
+## Introduction et problématique
+
+Les maladies cardiovasculaires, et en particulier les crises cardiaques (infarctus du myocarde), sont l’une des principales causes de décès dans le monde. Malgré les progrès de la médecine et de la technologie, bon nombre de ces événements surviennent soudainement et sans diagnostic anticipé. L’un des plus grands défis aujourd’hui est d’identifier les les personnes à haut risque ainsi que les facteurs qui déterminent la probabilité de risque cardiaque. En effet, cela permet de mettre en œuvre des mesures préventives efficaces et d'adopter des habitudes de vie saines. Dans ce contexte, l’utilisation de techniques d’apprentissage automatique offre l'opportunité d'analyser de grands volumes de données et à construire des modèles prédictifs. 
+
+## Données
+Pour répondre à notre problématique, nous avons parcouru les données de Kaggle, et nous sommes basés sur une base de données qui contient des informations médicales et comportamentales liées aux facteurs de risque des maladies cardiovasculaires. Chaque ligne répresente un individu, et chaque colonne est un attribut décrivant ses caractéristiques démographiques et sanitaires, ainsi que ses h
+...
+```
