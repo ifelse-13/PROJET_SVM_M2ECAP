@@ -5,6 +5,7 @@ title: "Projet expliqué.md"
 # `Projet expliqué.md`
 
 - Source path: `Projet expliqué.md`
+- Documentation path: `reference/projet-explique.md.qmd`
 
 ## Summary
 

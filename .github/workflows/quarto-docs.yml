@@ -33,7 +33,7 @@ jobs:
 
       - name: Commit generated documentation
         run: |
-          if git diff --quiet -- docs; then
+          if [ -z "$(git status --porcelain -- docs)" ]; then
             echo "No documentation changes to commit."
             exit 0
           fi

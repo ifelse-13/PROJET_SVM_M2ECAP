@@ -60,7 +60,12 @@ class GenerateQuartoDocsTests(unittest.TestCase):
                         "execution_count": 1,
                         "metadata": {},
                         "outputs": [],
-                        "source": ["import pandas as pd\n", "def train_model():\n", "    return pd.DataFrame()\n"],
+                        "source": [
+                            "pip install pandas\n",
+                            "import pandas as pd\n",
+                            "def train_model():\n",
+                            "    return pd.DataFrame()\n",
+                        ],
                     },
                 ],
                 "metadata": {},
@@ -83,6 +88,8 @@ class GenerateQuartoDocsTests(unittest.TestCase):
             notebook_content = notebook_doc.read_text(encoding="utf-8")
             self.assertIn("Jupyter notebook with 1 code cells and 1 markdown cells.", notebook_content)
             self.assertIn("functions: train_model", notebook_content)
+            self.assertIn("imports: pandas", notebook_content)
+            self.assertNotIn("pip install pandas", notebook_content)
 
 
 if __name__ == "__main__":

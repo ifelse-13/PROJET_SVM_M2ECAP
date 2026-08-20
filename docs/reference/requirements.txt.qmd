@@ -5,6 +5,7 @@ title: "requirements.txt"
 # `requirements.txt`
 
 - Source path: `requirements.txt`
+- Documentation path: `reference/requirements.txt.qmd`
 
 ## Summary
 

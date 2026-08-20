@@ -5,6 +5,7 @@ title: "scripts/generate_quarto_docs.py"
 # `scripts/generate_quarto_docs.py`
 
 - Source path: `scripts/generate_quarto_docs.py`
+- Documentation path: `reference/scripts/generate_quarto_docs.py.qmd`
 
 ## Summary
 

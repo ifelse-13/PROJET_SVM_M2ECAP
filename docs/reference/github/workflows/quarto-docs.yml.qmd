@@ -5,6 +5,7 @@ title: ".github/workflows/quarto-docs.yml"
 # `.github/workflows/quarto-docs.yml`
 
 - Source path: `.github/workflows/quarto-docs.yml`
+- Documentation path: `reference/github/workflows/quarto-docs.yml.qmd`
 
 ## Summary
 
@@ -52,7 +53,7 @@ jobs:
 
       - name: Commit generated documentation
         run: |
-          if git diff --quiet -- docs; then
+          if [ -z "$(git status --porcelain -- docs)" ]; then
             echo "No documentation changes to commit."
             exit 0
           fi

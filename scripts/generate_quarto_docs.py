@@ -93,6 +93,7 @@ LANGUAGE_BY_SUFFIX = {
 class FileDoc:
     source_path: Path
     output_path: Path
+    doc_path: Path
     title: str
     summary: str
     key_elements: list[str]
@@ -206,13 +207,15 @@ def summarize_python(text: str) -> tuple[str, list[str]]:
 
 def extract_notebook_code(notebook: dict) -> str:
     snippets: list[str] = []
+    snippet_length = 0
     for cell in notebook.get("cells", []):
         if cell.get("cell_type") == "code":
             source = "".join(cell.get("source", []))
             if source.strip():
                 snippets.append(source)
-        if len("\n\n".join(snippets)) >= EXCERPT_CHAR_LIMIT:
-            break
+                snippet_length += len(source) + 2
+                if snippet_length >= EXCERPT_CHAR_LIMIT:
+                    break
     return "\n\n".join(snippets)
 
 
@@ -253,7 +256,7 @@ def summarize_notebook(text: str) -> tuple[str, list[str], str | None]:
                     headings.append(line.lstrip("# ").strip())
     if headings:
         key_elements.append("markdown headings: " + ", ".join(headings[:6]))
-    return summary, key_elements, code or None
+    return summary, key_elements, sanitized_code or None
 
 
 def summarize_structured_text(text: str) -> tuple[str, list[str]]:
@@ -307,6 +310,7 @@ def describe_file(source_root: Path, path: Path, docs_root: Path) -> FileDoc:
     return FileDoc(
         source_path=relative_path,
         output_path=output_path_for(relative_path, docs_root),
+        doc_path=output_path_for(relative_path, docs_root).relative_to(docs_root.parent),
         title=path.name,
         summary=summary,
         key_elements=key_elements,
@@ -324,6 +328,7 @@ def render_file_doc(file_doc: FileDoc) -> str:
         f"# `{file_doc.source_path.as_posix()}`",
         "",
         f"- Source path: `{file_doc.source_path.as_posix()}`",
+        f"- Documentation path: `{file_doc.doc_path.as_posix()}`",
         "",
         "## Summary",
         "",

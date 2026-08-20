@@ -5,6 +5,7 @@ title: "tests/test_generate_quarto_docs.py"
 # `tests/test_generate_quarto_docs.py`
 
 - Source path: `tests/test_generate_quarto_docs.py`
+- Documentation path: `reference/tests/test_generate_quarto_docs.py.qmd`
 
 ## Summary
 

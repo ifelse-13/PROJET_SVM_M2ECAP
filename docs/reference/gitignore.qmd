@@ -1,0 +1,20 @@
+---
+title: ".gitignore"
+---
+
+# `.gitignore`
+
+- Source path: `.gitignore`
+- Documentation path: `reference/gitignore.qmd`
+
+## Summary
+
+__pycache__/
+
+## Excerpt
+
+```text
+__pycache__/
+*.py[cod]
+docs/_site/
+```

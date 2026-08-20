@@ -5,6 +5,7 @@ title: "Projet_SVM_script.ipynb"
 # `Projet_SVM_script.ipynb`
 
 - Source path: `Projet_SVM_script.ipynb`
+- Documentation path: `reference/projet_svm_script.ipynb.qmd`
 
 ## Summary
 
@@ -18,8 +19,6 @@ Jupyter notebook with 117 code cells and 47 markdown cells.
 ## Excerpt
 
 ```python
-pip install --upgrade scikit-learn
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -57,4 +56,6 @@ for col in data.columns:
 
 #vérification
 data.info()
+
+na = data.isna().sum()/data.shape[0]*100 #Ce code nous permet de vérifier qu'il n'y a pas de valeurs manquantes dans le dataset
 ```

@@ -14,6 +14,7 @@ title: "Reference: ."
 
 ### Files
 
+- [`.gitignore`](gitignore.qmd)
 - [`Projet expliqué.md`](projet-explique.md.qmd)
 - [`Projet_SVM_script.ipynb`](projet_svm_script.ipynb.qmd)
 - [`requirements.txt`](requirements.txt.qmd)
